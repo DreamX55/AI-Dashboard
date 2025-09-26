@@ -38,6 +38,7 @@ export default function App() {
   const [input, setInput] = useState('')
   const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try { return (localStorage.getItem('theme') as 'light' | 'dark') || 'light' } catch (_) { return 'light' }
   })
@@ -222,11 +223,44 @@ export default function App() {
 
       {/* Main chat area */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <header style={{ padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontWeight: 700 }}>AI Shipment Dashboard</div>
-          <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} style={{ padding: '8px 10px', borderRadius: 8, border: `1px solid ${colors.border}`, background: colors.cardBg, color: colors.text }}>
-            {theme === 'light' ? 'Dark mode' : 'Light mode'}
-          </button>
+        <header style={{ padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+          <div style={{ fontWeight: 700 }}>Advanced Terminal Manager</div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              onClick={() => setShowHelp(v => !v)}
+              title="Help & examples"
+              aria-label="Help"
+              style={{ padding: '6px 10px', borderRadius: 999, border: `1px solid ${colors.border}`, background: colors.cardBg, color: colors.text, cursor: 'pointer' }}
+            >
+              ?
+            </button>
+            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} style={{ padding: '8px 10px', borderRadius: 8, border: `1px solid ${colors.border}`, background: colors.cardBg, color: colors.text }}>
+              {theme === 'light' ? 'Dark mode' : 'Light mode'}
+            </button>
+          </div>
+          {showHelp && (
+            <div
+              role="dialog"
+              aria-label="Onboarding help"
+              style={{ position: 'absolute', top: 54, right: 16, width: 360, maxWidth: 'calc(100% - 32px)', background: colors.cardBg, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 8, boxShadow: theme === 'dark' ? '0 10px 30px rgba(0,0,0,0.6)' : '0 10px 30px rgba(0,0,0,0.1)', padding: 12, zIndex: 10 }}
+            >
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>Getting started</div>
+              <div style={{ fontSize: 14, color: colors.subtle, marginBottom: 8 }}>
+                Upload a CSV with headers in the first row. Typical columns might include: <span style={{ color: colors.text }}>date, shipment_id, terminal, quantity, flow_rate</span>.
+              </div>
+              <div style={{ fontWeight: 600, marginBottom: 6 }}>Example questions</div>
+              <ul style={{ margin: 0, paddingLeft: 18, color: colors.subtle, fontSize: 14 }}>
+                <li>Show daily throughput by terminal for last 30 days</li>
+                <li>Compare average flow rate between Terminal A and B</li>
+                <li>Forecast next weeks shipments based on trend</li>
+              </ul>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+                <button onClick={() => setShowHelp(false)} style={{ padding: '6px 10px', borderRadius: 6, border: `1px solid ${colors.border}`, background: colors.cardBg, color: colors.text }}>
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
         </header>
 
         <section style={{ flex: 1, padding: 16, overflowY: 'auto' }}>
@@ -246,7 +280,14 @@ export default function App() {
             })()
           ) : (
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
-              {messages.length === 0 && (<div style={{ color: colors.subtle }}>Upload a CSV and ask a question to begin.</div>)}
+              {messages.length === 0 && (
+                <div style={{ color: colors.subtle }}>
+                  Upload a CSV and ask a question to begin.
+                  <div style={{ marginTop: 8 }}>
+                    Try: <span style={{ color: colors.text }}>"What are the top terminals by quantity this month?"</span>
+                  </div>
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {messages.map(m => (
                   <div key={m.id} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
