@@ -10,6 +10,29 @@ type Message = {
 
 const API_BASE = import.meta.env.VITE_API_BASE || `${window.location.protocol}//${window.location.hostname}:8000`
 
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; message?: string }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, message: String(error?.message || error) }
+  }
+  componentDidCatch(error: any) {
+    console.error('UI Error:', error)
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div style={{ padding: 24 }}>
+        <h3>Something went wrong</h3>
+        <div style={{ color: '#b91c1c' }}>{this.state.message}</div>
+        <div style={{ marginTop: 8, color: '#6b7280' }}>Check the browser console for details.</div>
+      </div>
+    }
+    return this.props.children as any
+  }
+}
+
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -18,6 +41,14 @@ export default function App() {
   const fileRef = useRef<HTMLInputElement | null>(null)
 
   const canAsk = useMemo(() => !loading && input.trim().length > 0, [input, loading])
+
+  function generateId(): string {
+    try {
+      const c: any = (window as any).crypto
+      if (c && typeof c.randomUUID === 'function') return c.randomUUID()
+    } catch (_) {}
+    return 'id-' + Math.random().toString(36).slice(2) + '-' + Date.now()
+  }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -29,15 +60,17 @@ export default function App() {
       const res = await axios.post(`${API_BASE}/upload`, form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
+      const rows: number | undefined = res?.data?.rows
+      const columns: string[] | undefined = res?.data?.columns
       const msg: Message = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         role: 'assistant',
-        text: `CSV loaded: ${res.data.rows} rows. Columns: ${res.data.columns.join(', ')}`
+        text: `CSV loaded${typeof rows === 'number' ? `: ${rows} rows` : ''}. Columns: ${Array.isArray(columns) ? columns.join(', ') : 'n/a'}`
       }
       setMessages(m => [...m, msg])
     } catch (err: any) {
       const text = err?.response?.data?.detail || err.message || 'Upload failed'
-      setMessages(m => [...m, { id: crypto.randomUUID(), role: 'assistant', text }])
+      setMessages(m => [...m, { id: generateId(), role: 'assistant', text }])
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
@@ -46,24 +79,25 @@ export default function App() {
 
   async function handleAsk() {
     if (!canAsk) return
-    const q: Message = { id: crypto.randomUUID(), role: 'user', text: input }
+    const q: Message = { id: generateId(), role: 'user', text: input }
     setMessages(m => [...m, q])
     setInput('')
     setLoading(true)
     try {
       const res = await axios.post(`${API_BASE}/ask`, { question: q.text })
       const { text, imageUrl } = res.data
-      const a: Message = { id: crypto.randomUUID(), role: 'assistant', text, imageUrl }
+      const a: Message = { id: generateId(), role: 'assistant', text, imageUrl }
       setMessages(m => [...m, a])
     } catch (err: any) {
       const text = err?.response?.data?.detail || err.message || 'Request failed'
-      setMessages(m => [...m, { id: crypto.randomUUID(), role: 'assistant', text }])
+      setMessages(m => [...m, { id: generateId(), role: 'assistant', text }])
     } finally {
       setLoading(false)
     }
   }
 
   return (
+    <ErrorBoundary>
     <div style={{ maxWidth: 900, margin: '0 auto', padding: 24, fontFamily: 'Inter, system-ui, Arial' }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2 style={{ margin: 0 }}>AI Shipment Dashboard</h2>
@@ -108,6 +142,7 @@ export default function App() {
         </button>
       </footer>
     </div>
+    </ErrorBoundary>
   )
 }
 

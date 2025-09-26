@@ -57,4 +57,14 @@ VITE_API_BASE=http://localhost:8000
 - If `OPENAI_API_KEY` is not set, the backend falls back to built-in rule-based analysis for common queries. Forecasting and charting do not require OpenAI.
 - Charts are generated and saved under `backend/app/static/charts` and served from `/static/charts/...`.
 
+### Offline AI (no internet)
+You can enable local AI without OpenAI by running Ollama and a local model:
+1. Install Ollama: see `https://ollama.com`
+2. Pull a model (example):
+```bash
+ollama pull llama3.1:8b
+```
+3. Start the backend normally. If `OPENAI_API_KEY` is not set, the backend will attempt to use Ollama via LangChain. If Ollama is not available, it falls back to built-in rule answers and chart/forecast endpoints still work.
+
+
 

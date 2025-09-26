@@ -23,6 +23,8 @@ app = FastAPI(title="AI Shipment Analysis API")
 
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral:7b-instruct-q4_K_M")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
 
 app.add_middleware(
     CORSMiddleware,
@@ -121,21 +123,34 @@ def answer_with_rules(df: pd.DataFrame, query: str) -> Dict[str, Any]:
 
 
 def ai_dataframe_answer(df: pd.DataFrame, query: str) -> Dict[str, Any]:
-    # Fallback minimal AI using OpenAI if key present; otherwise simple rules
-    if not OPENAI_API_KEY:
-        return answer_with_rules(df, query)
+    # Try OpenAI first if key provided
+    if OPENAI_API_KEY:
+        try:
+            from langchain_openai import ChatOpenAI
+            from langchain.agents import create_pandas_dataframe_agent
+            llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1, api_key=OPENAI_API_KEY)
+            agent = create_pandas_dataframe_agent(llm, df, verbose=False)
+            result = agent.invoke({"input": query})
+            if isinstance(result, dict) and "output" in result:
+                return {"text": str(result["output"])[:4000]}
+            return {"text": str(result)[:4000]}
+        except Exception as e:
+            # fall through to offline
+            pass
 
+    # Offline fallback with Ollama (if installed locally)
     try:
-        from langchain_openai import ChatOpenAI
+        from langchain_community.chat_models import ChatOllama
         from langchain.agents import create_pandas_dataframe_agent
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1, api_key=OPENAI_API_KEY)
+        # Use local Ollama model (configurable via OLLAMA_MODEL)
+        llm = ChatOllama(model=OLLAMA_MODEL, temperature=0.1, base_url=OLLAMA_BASE_URL)
         agent = create_pandas_dataframe_agent(llm, df, verbose=False)
         result = agent.invoke({"input": query})
         if isinstance(result, dict) and "output" in result:
             return {"text": str(result["output"])[:4000]}
         return {"text": str(result)[:4000]}
-    except Exception as e:
-        return {"text": f"AI analysis failed: {e}. Falling back to rules.", **answer_with_rules(df, query)}
+    except Exception:
+        return answer_with_rules(df, query)
 
 
 def trend_chart(df: pd.DataFrame, value_col: str = "GrossQuantity", date_col: str = "ExitTime") -> Dict[str, Any]:
