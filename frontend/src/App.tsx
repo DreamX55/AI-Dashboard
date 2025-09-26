@@ -183,10 +183,10 @@ export default function App() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Logo at top-left */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img src="/honeywell.png" alt="Honeywell" style={{ height: 28, objectFit: 'contain' }} />
+            <img src="/honeywell.png" alt="Honeywell" style={{ height: 44, objectFit: 'contain' }} />
           </div>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>Saved dashboards</div>
-          <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 220px)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ fontWeight: 700, fontSize: 16, marginTop: 8 }}>Saved dashboards</div>
+          <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 260px)', display: 'flex', flexDirection: 'column', gap: 6 }}>
             {dashboards.length === 0 && <div style={{ color: colors.subtle }}>No saved charts yet.</div>}
             {dashboards.map(d => (
               <button
@@ -207,11 +207,11 @@ export default function App() {
           <div
             onDragOver={e => { e.preventDefault() }}
             onDrop={handleDrop}
-            style={{ width: '100%', border: `2px dashed ${colors.dashed}`, borderRadius: 8, padding: 16, textAlign: 'center', color: colors.subtle, background: theme === 'dark' ? '#0f172a' : undefined }}
+            style={{ width: '90%', border: `2px dashed ${colors.dashed}`, borderRadius: 8, padding: 10, textAlign: 'center', color: colors.subtle, background: theme === 'dark' ? '#0f172a' : undefined }}
           >
             Drag & drop CSV here
           </div>
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 8 }}>
             <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}>
               <input ref={fileRef} type="file" accept=".csv" onChange={handleUpload} disabled={uploading} style={{ display: 'none' }} />
               <span style={{ padding: '6px 10px', background: colors.buttonBg, color: colors.buttonText, borderRadius: 6 }}>{uploading ? 'Uploading...' : 'Browse CSV'}</span>
