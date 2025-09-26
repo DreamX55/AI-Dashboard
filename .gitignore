@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.DS_Store
+*.pyc
+__pycache__/
+.venv/
+env/
+.env
+frontend/.env
+backend/app/static/charts/
+backend/.env
+
+
