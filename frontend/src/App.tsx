@@ -178,39 +178,45 @@ export default function App() {
     <ErrorBoundary>
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'Inter, system-ui, Arial', background: colors.bg, color: colors.text }}>
       {/* Sidebar */}
-      <aside style={{ width: 280, borderRight: `1px solid ${colors.border}`, padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontWeight: 700, fontSize: 16 }}>Data & History</div>
-
-        {/* Drag & Drop upload */}
-        <div
-          onDragOver={e => { e.preventDefault() }}
-          onDrop={handleDrop}
-          style={{ border: `2px dashed ${colors.dashed}`, borderRadius: 8, padding: 16, textAlign: 'center', color: colors.subtle, background: theme === 'dark' ? '#0f172a' : undefined }}
-        >
-          Drag & drop CSV here
-          <div style={{ marginTop: 8 }}>
-            <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}>
-              <input ref={fileRef} type="file" accept=".csv" onChange={handleUpload} disabled={uploading} style={{ display: 'none' }} />
-              <span style={{ padding: '6px 10px', background: theme === 'dark' ? '#111827' : colors.text, color: theme === 'dark' ? colors.text : '#ffffff', borderRadius: 6 }}>{uploading ? 'Uploading...' : 'Browse CSV'}</span>
-            </label>
+      <aside style={{ width: 300, borderRight: `1px solid ${colors.border}`, padding: 12, display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'space-between' }}>
+        {/* Top section: Logo and saved dashboards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Logo at top-left */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src="/honeywell.png" alt="Honeywell" style={{ height: 28, objectFit: 'contain' }} />
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>Saved dashboards</div>
+          <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 220px)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {dashboards.length === 0 && <div style={{ color: colors.subtle }}>No saved charts yet.</div>}
+            {dashboards.map(d => (
+              <button
+                key={d.id}
+                onClick={() => setActiveDashboard(d.id)}
+                style={{ textAlign: 'left', padding: 10, borderRadius: 8, border: `1px solid ${colors.border}`, background: activeDashboard === d.id ? (theme === 'dark' ? '#0f172a' : '#f3f4f6') : (theme === 'dark' ? '#0b0f19' : '#ffffff'), color: colors.text }}
+              >
+                <div style={{ fontSize: 12, color: colors.subtle }}>{new Date(d.createdAt).toLocaleString()}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: colors.text, marginTop: 2 }}>{d.question || 'Chart'}</div>
+                {d.imageUrl && <div style={{ fontSize: 12, color: colors.subtle, marginTop: 2 }}>Image</div>}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Saved dashboards */}
-        <div style={{ fontWeight: 600, marginTop: 4 }}>Saved dashboards</div>
-        <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {dashboards.length === 0 && <div style={{ color: colors.subtle }}>No saved charts yet.</div>}
-          {dashboards.map(d => (
-            <button
-              key={d.id}
-              onClick={() => setActiveDashboard(d.id)}
-              style={{ textAlign: 'left', padding: 10, borderRadius: 8, border: `1px solid ${colors.border}`, background: activeDashboard === d.id ? (theme === 'dark' ? '#0f172a' : '#f3f4f6') : (theme === 'dark' ? '#0b0f19' : '#ffffff'), color: colors.text }}
-            >
-              <div style={{ fontSize: 12, color: colors.subtle }}>{new Date(d.createdAt).toLocaleString()}</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: colors.text, marginTop: 2 }}>{d.question || 'Chart'}</div>
-              {d.imageUrl && <div style={{ fontSize: 12, color: colors.subtle, marginTop: 2 }}>Image</div>}
-            </button>
-          ))}
+        {/* Bottom section: Drag & Drop centered */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            onDragOver={e => { e.preventDefault() }}
+            onDrop={handleDrop}
+            style={{ width: '100%', border: `2px dashed ${colors.dashed}`, borderRadius: 8, padding: 16, textAlign: 'center', color: colors.subtle, background: theme === 'dark' ? '#0f172a' : undefined }}
+          >
+            Drag & drop CSV here
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}>
+              <input ref={fileRef} type="file" accept=".csv" onChange={handleUpload} disabled={uploading} style={{ display: 'none' }} />
+              <span style={{ padding: '6px 10px', background: colors.buttonBg, color: colors.buttonText, borderRadius: 6 }}>{uploading ? 'Uploading...' : 'Browse CSV'}</span>
+            </label>
+          </div>
         </div>
       </aside>
 
